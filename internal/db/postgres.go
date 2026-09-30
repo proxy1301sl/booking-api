@@ -11,7 +11,7 @@ type Postgres struct {
 	DB *pgxpool.Pool
 }
 
-func Connect(cfg *config.DBConfig, ctx context.Context) (*Postgres, error) {
+func NewDB(ctx context.Context, cfg *config.DBConfig) (*Postgres, error) {
 	conf, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -25,5 +25,13 @@ func Connect(cfg *config.DBConfig, ctx context.Context) (*Postgres, error) {
 	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}
+	if err := pool.Ping(ctx); err != nil {
+		return nil, err
+	}
 	return &Postgres{DB: pool}, nil
+}
+
+func (p *Postgres) Close() {
+	p.DB.Close()
+
 }

@@ -5,11 +5,15 @@ import (
 	"net/http"
 )
 
-type NewHandler struct {
+type Handler struct {
 	svc *Service
 }
 
-func Login(h *NewHandler) http.HandlerFunc {
+func NewHandler(svc *Service) *Handler {
+	return &Handler{svc: svc}
+}
+
+func Login(h *Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&req)

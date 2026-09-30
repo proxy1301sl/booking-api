@@ -18,7 +18,12 @@ var (
 )
 
 type Service struct {
-	repo user.Repository
+	repo    user.Repository
+	manager Manager
+}
+
+func NewService(repo *user.Repository, manager *Manager) *Service {
+	return &Service{repo: *repo, manager: *manager}
 }
 
 func Validate(req LoginRequest) error {
