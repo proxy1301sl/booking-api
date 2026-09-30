@@ -1,23 +1,34 @@
 package auth
 
 import (
-	"booking-api/internal/domain/user"
 	"encoding/json"
 	"net/http"
 )
 
-func Login() http.HandlerFunc {
+type NewHandler struct {
+	svc *Service
+}
+
+func Login(h *NewHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req user.LoginRequest
+		var req LoginRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if err = Validate(&req); err != nil {
+		if err = Validate(req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		
+		user, err := h.svc.Register(r.Context(), req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(user)
+		w.WriteHeader(http.StatusOK)
+
 	}
 }

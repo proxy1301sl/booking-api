@@ -6,11 +6,7 @@ type User struct {
 	Email        string
 	PasswordHash string
 	Role         string
-	ID           string
+	ID           int64
 	CreatedAt    time.Time
-}
-
-type LoginRequest struct {
-	Email    string `json:"username"`
-	Password string `json:"password"`
+	Token        string
 }

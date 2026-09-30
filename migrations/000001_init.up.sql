@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS core;
 
-CREATE TABLE core.user(
+CREATE TABLE core.users(
     id            bigserial   PRIMARY KEY,
     password_hash text        NOT NULL,
     email         text        NOT NULL UNIQUE,
@@ -22,7 +22,7 @@ CREATE TABLE core.resource(
 
 CREATE TABLE core.booking(
     id bigserial PRIMARY KEY,
-    user_id bigint NOT NULL REFERENCES core.user(id) ON DELETE  CASCADE,
+    user_id bigint NOT NULL REFERENCES core.users(id) ON DELETE  CASCADE,
     resource_id bigint NOT NULL REFERENCES core.resource(id) ON DELETE RESTRICT,
     start_time timestamptz NOT NULL ,
     end_time  timestamptz NOT NULL,
