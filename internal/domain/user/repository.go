@@ -23,7 +23,7 @@ func (r *Repository) Create(ctx context.Context, u *User) error {
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
 	query := `SELECT * FROM users WHERE email = $1`
-	err := r.pool.QueryRow(ctx, query, email).Scan(&u.Email)
+	err := r.pool.QueryRow(ctx, query, email).Scan(&u.Email, &u.PasswordHash, &u.Role)
 	if err != nil {
 		return nil, err
 	}
