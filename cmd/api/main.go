@@ -4,7 +4,7 @@ import (
 	"booking-api/internal/config"
 	db2 "booking-api/internal/db"
 	"booking-api/internal/domain/auth"
-	"booking-api/internal/domain/user"
+	"booking-api/internal/domain/model"
 	"context"
 	"log"
 )
@@ -21,7 +21,7 @@ func main() {
 	}
 	defer db.Close()
 
-	userRepo := user.New(db)
+	userRepo := model.New(db)
 	manager := auth.NewManager(cfg)
 	authService := auth.NewService(userRepo, manager)
 	authHandler := auth.NewHandler(authService)
