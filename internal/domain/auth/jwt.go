@@ -2,17 +2,13 @@ package auth
 
 import (
 	"booking-api/internal/config"
-	"booking-api/internal/domain/user"
+	"booking-api/internal/domain/httpx"
+	"booking-api/internal/domain/model"
 	"errors"
 	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-)
-
-var (
-	ErrInvalidToken = errors.New("invalid token")
-	ErrExpiredToken = errors.New("expired token")
 )
 
 type Manager struct {
@@ -30,7 +26,7 @@ func NewManager(config *config.Config) *Manager {
 	return &Manager{config: config}
 }
 
-func (m *Manager) CreateToken(user *user.User) (string, error) {
+func (m *Manager) CreateToken(user *model.User) (string, error) {
 	claims := CustomClaims{
 		Role: user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -56,13 +52,13 @@ func (m *Manager) VerifyToken(tokenString string) (*CustomClaims, error) {
 	})
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, ErrExpiredToken
+			return nil, httpx.ErrExpiredToken
 		}
-		return nil, ErrInvalidToken
+		return nil, httpx.ErrInvalidToken
 	}
 	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
 		return claims, nil
 	}
-	return nil, ErrInvalidToken
+	return nil, httpx.ErrInvalidToken
 
 }

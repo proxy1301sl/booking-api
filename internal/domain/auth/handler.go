@@ -11,8 +11,8 @@ type Handler struct {
 	v   *validator2.Validator
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, v *validator2.Validator) *Handler {
+	return &Handler{svc: svc, v: v}
 }
 
 func Register(h *Handler) http.HandlerFunc {
@@ -27,7 +27,7 @@ func Register(h *Handler) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		err = h.svc.Register(r.Context(), req)
+		err = h.svc.CreateUser(r.Context(), req)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -49,6 +49,14 @@ func Login(h *Handler) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		token, err := h.svc.Login(r.Context(), req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(token)
 
 	}
 }
