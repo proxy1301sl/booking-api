@@ -4,8 +4,8 @@ CREATE TABLE core.users(
     id            bigserial   PRIMARY KEY,
     password_hash text        NOT NULL,
     email         text        NOT NULL UNIQUE,
-    role          text        NOT NULL DEFAULT 'model'
-                          CHECK ( role in ('model', 'admin') ),
+    role          text        NOT NULL DEFAULT 'user'
+                          CHECK ( role in ('user', 'admin') ),
     created_at    timestamptz NOT NULL DEFAULT now()
 );
 

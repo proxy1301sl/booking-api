@@ -2,10 +2,6 @@ package auth
 
 import (
 	"booking-api/internal/config"
-	"booking-api/internal/domain/httpx"
-	"booking-api/internal/domain/model"
-	"errors"
-	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -26,11 +22,10 @@ func NewManager(config *config.Config) *Manager {
 	return &Manager{config: config}
 }
 
-func (m *Manager) CreateToken(user *model.User) (string, error) {
+func (m *Manager) CreateToken(userID string) (string, error) {
 	claims := CustomClaims{
-		Role: user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   strconv.FormatInt(user.ID, 10),
+			Subject:   userID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(m.config.AccessTokenExpiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
@@ -41,24 +36,4 @@ func (m *Manager) CreateToken(user *model.User) (string, error) {
 		return "", err
 	}
 	return tokenString, nil
-}
-
-func (m *Manager) VerifyToken(tokenString string) (*CustomClaims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(t *jwt.Token) (any, error) {
-		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid signing method")
-		}
-		return []byte(m.config.JWTSecret), nil
-	})
-	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
-			return nil, httpx.ErrExpiredToken
-		}
-		return nil, httpx.ErrInvalidToken
-	}
-	if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-		return claims, nil
-	}
-	return nil, httpx.ErrInvalidToken
-
 }

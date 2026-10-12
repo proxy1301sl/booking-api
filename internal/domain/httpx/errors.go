@@ -8,5 +8,5 @@ var (
 	ErrEmailAlreadyExists = errors.New("email already exists")
 	ErrNotFound           = errors.New("not found")
 	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrUserExists         = errors.New("user already exists")
+	ErrUserNotFound       = errors.New("user not found")
 )

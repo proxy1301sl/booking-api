@@ -4,7 +4,7 @@ import (
 	"booking-api/internal/domain/model"
 	"context"
 	"errors"
-	"time"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -37,8 +37,6 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) error {
 		Email:        req.Email,
 		PasswordHash: string(hash),
 		Role:         "user",
-		ID:           0,
-		CreatedAt:    time.Time{},
 	}
 	err = s.repo.Create(ctx, &usr)
 	if err != nil {
@@ -57,9 +55,22 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (string, error) {
 	if err != nil {
 		return "", httpx.ErrInvalidCredentials
 	}
-	token, err := s.manager.CreateToken(exst)
+	token, err := s.manager.CreateToken(strconv.FormatInt(exst.ID, 10))
 	if err != nil {
 		return "", err
 	}
 	return token, nil
+}
+
+func (s *Service) GetUserID(ctx context.Context, userID int64) (*model.UserResponse, error) {
+	user, err := s.repo.FindByID(ctx, strconv.FormatInt(userID, 10))
+	if err != nil {
+		return nil, err
+	}
+	usr := model.UserResponse{
+		ID:    user.ID,
+		Email: user.Email,
+		Role:  user.Role,
+	}
+	return &usr, nil
 }

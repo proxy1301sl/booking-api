@@ -25,7 +25,7 @@ func (r *Repository) Create(ctx context.Context, u *User) error {
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
-	query := `SELECT * FROM users WHERE email = $1`
+	query := `SELECT id, password_hash, email, role, created_at FROM users WHERE email = $1`
 	err := r.pool.QueryRow(ctx, query, email).Scan(&u.ID, &u.PasswordHash, &u.Email, &u.Role, &u.CreatedAt)
 	if err == nil {
 		return &u, nil
@@ -34,5 +34,18 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 		return nil, httpx.ErrNotFound
 	}
 
+	return nil, err
+}
+
+func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
+	var u User
+	query := `SELECT id, password_hash, email, role, created_at FROM users WHERE id = $1`
+	err := r.pool.QueryRow(ctx, query, id).Scan(&u.ID, &u.PasswordHash, &u.Email, &u.Role, &u.CreatedAt)
+	if err == nil {
+		return &u, nil
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, httpx.ErrUserNotFound
+	}
 	return nil, err
 }
