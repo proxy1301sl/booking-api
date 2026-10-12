@@ -23,9 +23,7 @@ func NewDB(ctx context.Context, cfg *config.DBConfig) (*Postgres, error) {
 		return nil, err
 	}
 	if err := pool.Ping(ctx); err != nil {
-		return nil, err
-	}
-	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
 		return nil, err
 	}
 	return &Postgres{DB: pool}, nil
