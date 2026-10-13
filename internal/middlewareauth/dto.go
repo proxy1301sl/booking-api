@@ -1,8 +1,8 @@
-package middleware
+package middlewareauth
 
 import "github.com/golang-jwt/jwt/v5"
 
 type Claims struct {
-	UserId string `json:"user_id"`
+	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }

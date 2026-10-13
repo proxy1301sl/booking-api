@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"booking-api/internal/middleware"
+	"booking-api/internal/domain/responce"
 	validator2 "booking-api/internal/validator"
 	"context"
-	"encoding/json"
 	"net/http"
-	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
@@ -18,72 +18,57 @@ func NewHandler(svc *Service, v *validator2.Validator) *Handler {
 	return &Handler{svc: svc, v: v}
 }
 
-func Register(h *Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req RegisterRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if validation := h.v.Validate(req); validation != nil {
-			http.Error(w, validation.Error(), http.StatusBadRequest)
-			return
-		}
-		err = h.svc.CreateUser(r.Context(), req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusCreated)
-
+func (h *Handler) Register(c *gin.Context, ctx context.Context) {
+	var req RegisterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		responce.ErrorResponse(c, http.StatusBadRequest, err.Error(), err)
+		return
 	}
+	if validation := h.v.Validate(req); validation != nil {
+		responce.ErrorResponse(c, http.StatusBadRequest, validation.Error(), nil)
+		return
+	}
+	user, err := h.svc.CreateUser(ctx, req)
+	if err != nil {
+		http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	responce.SuccessResponse(c, http.StatusCreated, "User created successfully", user)
 }
 
-func Login(h *Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var req LoginRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		if errors := h.v.Validate(req); errors != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		token, err := h.svc.Login(r.Context(), req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(token)
-
+func (h *Handler) Login(c *gin.Context, ctx context.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		responce.ErrorResponse(c, http.StatusBadRequest, err.Error(), err)
+		return
 	}
+	if validationErr := h.v.Validate(req); validationErr != nil {
+		responce.ErrorResponse(c, http.StatusBadRequest, validationErr.Error(), nil)
+		return
+	}
+	token, err := h.svc.Login(ctx, req)
+	if err != nil {
+		http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	responce.SuccessResponse(c, http.StatusOK, "Token created successfully", token)
 }
 
-func Me(h *Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var ctx context.Context
-		id, ok := middleware.FromUserID(r.Context())
-		if !ok {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		userid, err := strconv.ParseInt(id, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-		usr, err := h.svc.GetUserID(ctx, userid)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(usr)
-
+func (h *Handler) Me(c *gin.Context, ctx context.Context) {
+	userID, exist := c.Get("user_id")
+	if !exist {
+		responce.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", nil)
+		return
 	}
+	id, ok := userID.(int64)
+	if !ok {
+		responce.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	usr, err := h.svc.GetUserID(ctx, id)
+	if err != nil {
+		responce.ErrorResponse(c, http.StatusInternalServerError, "", err.Error())
+		return
+	}
+	responce.SuccessResponse(c, http.StatusOK, "User created successfully", usr)
 }
