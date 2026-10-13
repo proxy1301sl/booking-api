@@ -20,17 +20,17 @@ func NewService(repo *model.Repository, manager *Manager) *Service {
 	return &Service{repo: *repo, manager: *manager}
 }
 
-func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) error {
-	_, err := s.repo.FindByEmail(ctx, req.Email)
-	if err == nil {
-		return httpx.ErrEmailAlreadyExists
+func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.User, error) {
+	existing, err := s.repo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, httpx.ErrEmailAlreadyExists
 	}
 	if !errors.Is(err, httpx.ErrNotFound) {
-		return err
+		return existing, nil
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	usr := model.User{
@@ -40,9 +40,9 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) error {
 	}
 	err = s.repo.Create(ctx, &usr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &usr, nil
 
 }
 
