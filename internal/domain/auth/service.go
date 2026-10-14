@@ -16,17 +16,17 @@ type Service struct {
 	manager Manager
 }
 
-func NewService(repo *model.Repository, manager *Manager) *Service {
-	return &Service{repo: *repo, manager: *manager}
+func NewService(repo model.Repository, manager Manager) *Service {
+	return &Service{repo: repo, manager: manager}
 }
 
 func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.User, error) {
-	existing, err := s.repo.FindByEmail(ctx, req.Email)
-	if err != nil {
+	_, err := s.repo.FindByEmail(ctx, req.Email)
+	if err == nil {
 		return nil, httpx.ErrEmailAlreadyExists
 	}
 	if !errors.Is(err, httpx.ErrNotFound) {
-		return existing, nil
+		return nil, err
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
