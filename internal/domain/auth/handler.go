@@ -3,7 +3,6 @@ package auth
 import (
 	"booking-api/internal/domain/responce"
 	validator2 "booking-api/internal/validator"
-	"context"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,7 @@ func NewHandler(svc *Service, v *validator2.Validator) *Handler {
 	return &Handler{svc: svc, v: v}
 }
 
-func (h *Handler) Register(c *gin.Context, ctx context.Context) {
+func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		responce.ErrorResponse(c, http.StatusBadRequest, err.Error(), err)
@@ -28,15 +27,15 @@ func (h *Handler) Register(c *gin.Context, ctx context.Context) {
 		responce.ErrorResponse(c, http.StatusBadRequest, validation.Error(), nil)
 		return
 	}
-	user, err := h.svc.CreateUser(ctx, req)
+	user, err := h.svc.CreateUser(c, req)
 	if err != nil {
-		http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "User created successfully", user)
 }
 
-func (h *Handler) Login(c *gin.Context, ctx context.Context) {
+func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		responce.ErrorResponse(c, http.StatusBadRequest, err.Error(), err)
@@ -46,15 +45,15 @@ func (h *Handler) Login(c *gin.Context, ctx context.Context) {
 		responce.ErrorResponse(c, http.StatusBadRequest, validationErr.Error(), nil)
 		return
 	}
-	token, err := h.svc.Login(ctx, req)
+	token, err := h.svc.Login(c, req)
 	if err != nil {
-		http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "Token created successfully", token)
 }
 
-func (h *Handler) Me(c *gin.Context, ctx context.Context) {
+func (h *Handler) Me(c *gin.Context) {
 	userID, exist := c.Get("user_id")
 	if !exist {
 		responce.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", nil)
@@ -65,10 +64,10 @@ func (h *Handler) Me(c *gin.Context, ctx context.Context) {
 		responce.ErrorResponse(c, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
-	usr, err := h.svc.GetUserID(ctx, id)
+	usr, err := h.svc.GetUserID(c, id)
 	if err != nil {
 		responce.ErrorResponse(c, http.StatusInternalServerError, "", err.Error())
 		return
 	}
-	responce.SuccessResponse(c, http.StatusOK, "User created successfully", usr)
+	responce.SuccessResponse(c, http.StatusOK, "User fetched successfully", usr)
 }

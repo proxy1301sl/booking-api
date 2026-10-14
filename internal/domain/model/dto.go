@@ -8,7 +8,6 @@ type User struct {
 	Role         string
 	ID           int64
 	CreatedAt    time.Time
-	Token        string
 }
 
 type UserResponse struct {
