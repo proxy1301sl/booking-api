@@ -12,7 +12,7 @@ CREATE TABLE core.users(
 
 CREATE TABLE core.resource(
     id bigserial PRIMARY KEY,
-    name text NOT NULL,
+    name        text,
     description text,
     location text,
     is_active boolean NOT NULL DEFAULT TRUE,
