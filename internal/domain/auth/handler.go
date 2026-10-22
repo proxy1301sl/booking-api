@@ -27,9 +27,9 @@ func (h *Handler) Register(c *gin.Context) {
 		responce.ErrorResponse(c, http.StatusBadRequest, validation.Error(), nil)
 		return
 	}
-	user, err := h.svc.CreateUser(c, req)
+	user, err := h.svc.CreateUser(c.Request.Context(), req)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "User created successfully", user)
@@ -45,9 +45,9 @@ func (h *Handler) Login(c *gin.Context) {
 		responce.ErrorResponse(c, http.StatusBadRequest, validationErr.Error(), nil)
 		return
 	}
-	token, err := h.svc.Login(c, req)
+	token, err := h.svc.Login(c.Request.Context(), req)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		responce.ErrorResponse(c, http.StatusUnauthorized, err.Error(), nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "Token created successfully", token)

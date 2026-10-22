@@ -4,7 +4,6 @@ import (
 	"booking-api/internal/domain/model"
 	"context"
 	"errors"
-	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -36,7 +35,6 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.U
 	usr := model.User{
 		Email:        req.Email,
 		PasswordHash: string(hash),
-		Role:         "user",
 	}
 	err = s.repo.Create(ctx, &usr)
 	if err != nil {
@@ -47,15 +45,15 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.U
 }
 
 func (s *Service) Login(ctx context.Context, req LoginRequest) (string, error) {
-	exst, err := s.repo.FindByEmail(ctx, req.Email)
+	user, err := s.repo.FindByEmail(ctx, req.Email)
 	if err != nil {
 		return "", httpx.ErrInvalidCredentials
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(exst.PasswordHash), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 	if err != nil {
 		return "", httpx.ErrInvalidCredentials
 	}
-	token, err := s.manager.CreateToken(strconv.FormatInt(exst.ID, 10))
+	token, err := s.manager.CreateToken(user.ID)
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +61,7 @@ func (s *Service) Login(ctx context.Context, req LoginRequest) (string, error) {
 }
 
 func (s *Service) GetUserID(ctx context.Context, userID int64) (*model.UserResponse, error) {
-	user, err := s.repo.FindByID(ctx, strconv.FormatInt(userID, 10))
+	user, err := s.repo.FindByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
