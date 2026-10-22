@@ -25,3 +25,12 @@ type ListParams struct {
 	Limit  int
 	Offset int
 }
+
+type ListResource struct {
+	ID          int64
+	Name        string
+	Description string
+	Location    string
+	IsActive    bool
+	CreatedAt   time.Time
+}

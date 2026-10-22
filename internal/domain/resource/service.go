@@ -1,6 +1,8 @@
 package resource
 
-import "context"
+import (
+	"context"
+)
 
 type Service struct {
 	repo *Repository
@@ -15,7 +17,7 @@ func (s *Service) List(ctx context.Context, p *Pagination) (*ListResponse, error
 		Limit:  p.Limit,
 		Offset: (p.Page - 1) * p.Limit,
 	}
-	res, err := s.repo.GetAvailableApartments(ctx, &pg)
+	res, err := s.repo.ListAvailableResources(ctx, &pg)
 	if err != nil {
 		return nil, err
 	}
@@ -27,4 +29,23 @@ func (s *Service) List(ctx context.Context, p *Pagination) (*ListResponse, error
 		Data: res,
 	}
 	return &response, nil
+}
+
+
+func (s *Service) Get(ctx context.Context, id int64) (*ListResource, error) {
+	res, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	list := &ListResource{
+		ID:          res.ID,
+		Name:        res.Name,
+		Description: res.Description,
+		Location:    res.Location,
+		IsActive:    res.IsActive,
+		CreatedAt:   res.CreatedAt,
+	}
+	return list, nil
+
+
 }
