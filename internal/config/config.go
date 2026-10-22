@@ -39,7 +39,9 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	if MaxIdleConn > MaxOpenConn {
+		MaxIdleConn = MaxOpenConn
+	}
 	dbConfig := &DBConfig{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		MaxOpenConn: MaxOpenConn,

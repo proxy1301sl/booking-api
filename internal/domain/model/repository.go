@@ -37,7 +37,7 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 	return nil, err
 }
 
-func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
+func (r *Repository) FindByID(ctx context.Context, id int64) (*User, error) {
 	var u User
 	query := `SELECT id, password_hash, email, role, created_at FROM users WHERE id = $1`
 	err := r.pool.QueryRow(ctx, query, id).Scan(&u.ID, &u.PasswordHash, &u.Email, &u.Role, &u.CreatedAt)

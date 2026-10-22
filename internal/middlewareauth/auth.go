@@ -1,24 +1,28 @@
 package middlewareauth
 
 import (
-	"booking-api/internal/config"
-	"context"
+	"booking-api/internal/domain/auth"
+
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
-func AuthMiddleware(ctx context.Context) gin.HandlerFunc {
+type AuthMiddleware struct {
+	manager *auth.Manager
+}
+
+func NewAuthMiddleware(manager *auth.Manager) *AuthMiddleware {
+	return &AuthMiddleware{
+		manager: manager,
+	}
+}
+
+func (m *AuthMiddleware) Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cfg, err := config.Load()
-		if err != nil {
-			http.Error(c.Writer, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-		req := c.GetHeader("Authorization")
-		if req == "" {
+		header := c.GetHeader("Authorization")
+		if header == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"success": false,
 				"code":    http.StatusUnauthorized,
@@ -26,19 +30,12 @@ func AuthMiddleware(ctx context.Context) gin.HandlerFunc {
 			})
 			return
 		}
-		tokenf := strings.TrimPrefix(req, "Bearer ")
-		claims := &Claims{}
-		tkn, err := jwt.ParseWithClaims(tokenf, claims, func(token *jwt.Token) (any, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return []byte(cfg.JWTSecret), nil
-		})
-		if err != nil || !tkn.Valid {
-			http.Error(c.Writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
+		token := strings.TrimPrefix(header, "Bearer ")
+		pars, err := m.manager.ParseToken(token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
 		}
-		c.Set("user_id", claims.UserID)
+		c.Set("user_id", pars.UserID)
 		c.Next()
 
 	}
