@@ -22,12 +22,7 @@ type Config struct {
 func Load() (*Config, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	accessTokenExpiration := os.Getenv("ACCESS_TOKEN_EXPIRATION")
-	refreshTokenExpiration := os.Getenv("REFRESH_TOKEN_EXPIRATION")
 	accessExp, err := time.ParseDuration(accessTokenExpiration)
-	if err != nil {
-		return nil, err
-	}
-	refreshExp, err := time.ParseDuration(refreshTokenExpiration)
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +43,9 @@ func Load() (*Config, error) {
 		MaxIdleConn: MaxIdleConn,
 	}
 	return &Config{
-		JWTSecret:              jwtSecret,
-		AccessTokenExpiration:  accessExp,
-		RefreshTokenExpiration: refreshExp,
-		DB:                     dbConfig,
+		JWTSecret:             jwtSecret,
+		AccessTokenExpiration: accessExp,
+		DB:                    dbConfig,
 	}, nil
 
 }

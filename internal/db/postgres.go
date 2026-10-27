@@ -8,10 +8,11 @@ import (
 )
 
 type Postgres struct {
-	DB *pgxpool.Pool
+	Pool *pgxpool.Pool
 }
 
-func NewDB(ctx context.Context, cfg *config.DBConfig) (*Postgres, error) {
+func NewDB(cfg *config.DBConfig) (*Postgres, error) {
+	ctx := context.Background()
 	conf, err := pgxpool.ParseConfig(cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
@@ -26,10 +27,10 @@ func NewDB(ctx context.Context, cfg *config.DBConfig) (*Postgres, error) {
 		pool.Close()
 		return nil, err
 	}
-	return &Postgres{DB: pool}, nil
+	return &Postgres{Pool: pool}, nil
 }
 
 func (p *Postgres) Close() {
-	p.DB.Close()
+	p.Pool.Close()
 
 }
