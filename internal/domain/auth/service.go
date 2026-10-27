@@ -31,7 +31,6 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.U
 	if err != nil {
 		return nil, err
 	}
-
 	usr := model.User{
 		Email:        req.Email,
 		PasswordHash: string(hash),

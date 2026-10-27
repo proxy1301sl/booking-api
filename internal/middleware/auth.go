@@ -1,4 +1,4 @@
-package middlewareauth
+package middleware
 
 import (
 	"booking-api/internal/domain/auth"
@@ -34,6 +34,7 @@ func (m *AuthMiddleware) Auth() gin.HandlerFunc {
 		pars, err := m.manager.ParseToken(token)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{})
+			return
 		}
 		c.Set("user_id", pars.UserID)
 		c.Next()

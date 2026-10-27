@@ -10,10 +10,10 @@ import (
 
 type Handler struct {
 	svc *Service
-	v   *validator2.Validator
+	v   *validator2.Validatorr
 }
 
-func NewHandler(svc *Service, v *validator2.Validator) *Handler {
+func NewHandler(svc *Service, v *validator2.Validatorr) *Handler {
 	return &Handler{svc: svc, v: v}
 }
 
