@@ -1,6 +1,7 @@
 package booking
 
 import (
+	"booking-api/internal/domain/httpx"
 	"booking-api/internal/domain/resource"
 	"context"
 	"errors"
@@ -27,7 +28,7 @@ func (h *Service) CreateBooking(ctx context.Context, userID, resID int64, startT
 		return 0, err
 	}
 	id, err := h.repo.CreateBooking(userID, res.ID, startTime, endTime)
-	if err != nil {
+	if errors.Is(err, httpx.ErrConflict) {
 		return 0, err
 	}
 	return id, nil

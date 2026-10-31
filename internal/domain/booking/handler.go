@@ -1,8 +1,10 @@
 package booking
 
 import (
+	"booking-api/internal/domain/httpx"
 	"booking-api/internal/domain/responce"
 	"booking-api/internal/domain/validator"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,8 +37,12 @@ func (h *BookingHandler) Booking(c *gin.Context) {
 	}
 	id, err := h.svc.CreateBooking(c.Request.Context(), id, req.resource_id, req.start_time, req.end_time)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), err)
-		return
+		if errors.Is(err, httpx.ErrConflict) {
+			responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "", id)
 

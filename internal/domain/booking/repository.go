@@ -2,7 +2,7 @@ package booking
 
 import (
 	"booking-api/internal/db"
-	"errors"
+	"booking-api/internal/domain/httpx"
 	"time"
 
 	"context"
@@ -22,8 +22,12 @@ func (r *Repository) CreateBooking(userID, resID int64, startTime, endTime *time
 	ctx := context.Background()
 	query := `INSERT INTO booking (user_id, start_time, end_time) VALUES ($1, $2, $3) RETURNING id`
 	err := r.db.Pool.QueryRow(ctx, query, userID, startTime, endTime).Scan(&resID)
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
-		return 0, pgErr
+	pgerr, ok := err.(*pgconn.PgError)
+	if !ok {
+		return 0, err
+	}
+	if pgerr.Code == "23P01" {
+		return 0, httpx.ErrConflict
 	}
 
 	return resID, nil
