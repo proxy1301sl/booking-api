@@ -2,7 +2,7 @@ package auth
 
 import (
 	"booking-api/internal/domain/responce"
-	validator2 "booking-api/internal/validator"
+	"booking-api/internal/domain/validator"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,10 +10,10 @@ import (
 
 type Handler struct {
 	svc *Service
-	v   *validator2.Validatorr
+	v   *validator.Validatorr
 }
 
-func NewHandler(svc *Service, v *validator2.Validatorr) *Handler {
+func NewHandler(svc *Service, v *validator.Validatorr) *Handler {
 	return &Handler{svc: svc, v: v}
 }
 

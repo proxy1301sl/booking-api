@@ -1,4 +1,5 @@
 CREATE SCHEMA IF NOT EXISTS core;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE core.users(
     id            bigserial   PRIMARY KEY,
@@ -27,7 +28,9 @@ CREATE TABLE core.booking(
     start_time timestamptz NOT NULL ,
     end_time  timestamptz NOT NULL,
     created_at    timestamptz NOT NULL DEFAULT now(),
-    CHECK ( end_time > start_time )
+    EXCLUDE USING gist (
+        resource_id WITH =, tstzrange(start_time, end_time) WITH &&)
+
 );
 
 
