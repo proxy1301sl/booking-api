@@ -8,17 +8,14 @@ type Request struct {
 	end_time    *time.Time `json:"end_time" validate:"end_time > start_time"`
 }
 
-type Flat struct {
+type Response struct {
 	id          int64
-	user_id     string
-	resource_id string
+	user_id     int64
+	resource_id int64
 	start_time  time.Time
 	end_time    time.Time
-	created_at  time.Time
 }
 
-type Repo struct {
-	userID     int64
-	start_time time.Time
-	end_time   time.Time
+type ListResponse struct {
+	Data []Response
 }

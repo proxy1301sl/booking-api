@@ -1,6 +1,7 @@
 package booking
 
 import (
+	"booking-api/internal/domain/httpx"
 	"booking-api/internal/domain/resource"
 	"context"
 	"errors"
@@ -26,9 +27,23 @@ func (h *Service) CreateBooking(ctx context.Context, userID, resID int64, startT
 	if err != nil {
 		return 0, err
 	}
-	id, err := h.repo.CreateBooking(userID, res.ID, startTime, endTime)
-	if err != nil {
+	id, err := h.repo.CreateBooking(ctx, userID, res.ID, startTime, endTime)
+	if errors.Is(err, httpx.ErrConflict) {
 		return 0, err
 	}
 	return id, nil
+}
+
+func (h *Service) GetBookingByID(ctx context.Context, userID int64) (*ListResponse, error) {
+	res, err := h.repo.GetBookingByID(ctx, userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+	resp := &ListResponse{
+		Data: res,
+	}
+	return resp, nil
 }

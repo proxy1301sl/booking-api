@@ -27,7 +27,6 @@ CREATE TABLE core.booking(
     resource_id bigint NOT NULL REFERENCES core.resource(id) ON DELETE RESTRICT,
     start_time timestamptz NOT NULL ,
     end_time  timestamptz NOT NULL,
-    created_at    timestamptz NOT NULL DEFAULT now(),
     EXCLUDE USING gist (
         resource_id WITH =, tstzrange(start_time, end_time) WITH &&)
 

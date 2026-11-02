@@ -1,8 +1,10 @@
 package booking
 
 import (
+	"booking-api/internal/domain/httpx"
 	"booking-api/internal/domain/responce"
 	"booking-api/internal/domain/validator"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,10 @@ import (
 type BookingHandler struct {
 	svc *Service
 	v   *validator.Validatorr
+}
+
+func NewBookingHandler(svc *Service, v *validator.Validatorr) *BookingHandler {
+	return &BookingHandler{svc: svc, v: v}
 }
 
 func (h *BookingHandler) Booking(c *gin.Context) {
@@ -35,9 +41,33 @@ func (h *BookingHandler) Booking(c *gin.Context) {
 	}
 	id, err := h.svc.CreateBooking(c.Request.Context(), id, req.resource_id, req.start_time, req.end_time)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), err)
-		return
+		if errors.Is(err, httpx.ErrConflict) {
+			responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "", id)
+
+}
+
+func (h *BookingHandler) GetBookings(c *gin.Context) {
+	userID, exist := c.Get("user_id")
+	if !exist {
+		responce.ErrorResponse(c, http.StatusUnauthorized, "not_found", nil)
+		return
+	}
+	id, ok := userID.(int64)
+	if !ok {
+		responce.ErrorResponse(c, http.StatusInternalServerError, "", nil)
+		return
+	}
+	res, err := h.svc.GetBookingByID(c.Request.Context(), id)
+	if err != nil {
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	responce.SuccessResponse(c, http.StatusOK, "", res)
 
 }

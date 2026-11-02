@@ -9,5 +9,5 @@ var (
 	ErrNotFound           = errors.New("not found")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUserNotFound       = errors.New("user not found")
-
+	ErrConflict           = errors.New("conflict")
 )
