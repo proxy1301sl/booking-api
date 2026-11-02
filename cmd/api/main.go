@@ -4,6 +4,7 @@ import (
 	"booking-api/internal/config"
 	db2 "booking-api/internal/db"
 	"booking-api/internal/domain/auth"
+	"booking-api/internal/domain/booking"
 	"booking-api/internal/domain/model"
 	"booking-api/internal/domain/resource"
 	validator2 "booking-api/internal/domain/validator"
@@ -29,6 +30,9 @@ func main() {
 	var resourceRepo *resource.Repository
 	var resourceService *resource.Service
 	var valid *validator2.Validatorr
+	var bookingService *booking.Service
+	var bookingRepository *booking.Repository
+	var bookingHandler *booking.BookingHandler
 
 	if cfg.DB.DatabaseURL == "" {
 		db, err = db2.NewDB(cfg.DB)
@@ -46,12 +50,17 @@ func main() {
 	valid = validator2.New()
 	authHandler := auth.NewHandler(authService, valid)
 	resourceHandler := resource.NewHandler(resourceService)
+	bookingRepository = booking.NewRepository(db)
+	bookingService = booking.NewBookingService(*bookingRepository, *resourceRepo)
+	bookingHandler = booking.NewBookingHandler(bookingService, valid)
 
 	r := gin.Default()
 	protected := r.Group("/")
 	{
 		protected.Use(middleware.Auth())
 		protected.GET("/me", authHandler.Me)
+		protected.POST("/booking", bookingHandler.Booking)
+		protected.GET("/booking", bookingHandler.GetBookings)
 	}
 	auth := r.Group("/auth")
 	{
@@ -63,6 +72,7 @@ func main() {
 		resource.GET("/resource", resourceHandler.Resource)
 		resource.GET("/resource/:id", resourceHandler.Resource)
 	}
+
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: r,

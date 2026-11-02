@@ -15,6 +15,10 @@ type BookingHandler struct {
 	v   *validator.Validatorr
 }
 
+func NewBookingHandler(svc *Service, v *validator.Validatorr) *BookingHandler {
+	return &BookingHandler{svc: svc, v: v}
+}
+
 func (h *BookingHandler) Booking(c *gin.Context) {
 	var req Request
 	if err := c.ShouldBind(&req); err != nil {
@@ -45,5 +49,25 @@ func (h *BookingHandler) Booking(c *gin.Context) {
 
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "", id)
+
+}
+
+func (h *BookingHandler) GetBookings(c *gin.Context) {
+	userID, exist := c.Get("user_id")
+	if !exist {
+		responce.ErrorResponse(c, http.StatusUnauthorized, "not_found", nil)
+		return
+	}
+	id, ok := userID.(int64)
+	if !ok {
+		responce.ErrorResponse(c, http.StatusInternalServerError, "", nil)
+		return
+	}
+	res, err := h.svc.GetBookingByID(c.Request.Context(), id)
+	if err != nil {
+		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	responce.SuccessResponse(c, http.StatusOK, "", res)
 
 }
