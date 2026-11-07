@@ -45,7 +45,7 @@ func (m *Manager) ParseToken(tokenString string) (*JWTClaims, error) {
 			return nil, jwt.ErrSignatureInvalid
 		}
 		return []byte(m.cfg.JWTSecret), nil
-	})
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}), jwt.WithExpirationRequired())
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, httpx.ErrExpiredToken
@@ -53,6 +53,11 @@ func (m *Manager) ParseToken(tokenString string) (*JWTClaims, error) {
 		return nil, httpx.ErrInvalidToken
 	}
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		userID, err := strconv.ParseInt(claims.Subject, 10, 64)
+		if err != nil || userID <= 0 {
+			return nil, httpx.ErrInvalidToken
+		}
+		claims.UserID = userID
 		return claims, nil
 	}
 	return nil, jwt.ErrSignatureInvalid

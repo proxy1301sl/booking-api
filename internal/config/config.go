@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"strconv"
 	"time"
@@ -21,10 +22,16 @@ type Config struct {
 
 func Load() (*Config, error) {
 	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return nil, errors.New("JWT_SECRET is required")
+	}
 	accessTokenExpiration := os.Getenv("ACCESS_TOKEN_EXPIRATION")
 	accessExp, err := time.ParseDuration(accessTokenExpiration)
 	if err != nil {
 		return nil, err
+	}
+	if accessExp <= 0 {
+		return nil, errors.New("ACCESS_TOKEN_EXPIRATION must be positive")
 	}
 	MaxOpenConn, err := strconv.Atoi(os.Getenv("MAX_OPEN_CONN"))
 	if err != nil {

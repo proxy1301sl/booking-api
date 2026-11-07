@@ -20,7 +20,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
+func Run() {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatal(err)
@@ -34,13 +34,11 @@ func main() {
 	var bookingRepository *booking.Repository
 	var bookingHandler *booking.BookingHandler
 
-	if cfg.DB.DatabaseURL == "" {
-		db, err = db2.NewDB(cfg.DB)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer db.Close()
+	db, err = db2.NewDB(cfg.DB)
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer db.Close()
 	userRepo = model.NewUserRepo(db)
 	jwtManager := auth.NewManager(cfg)
 	authService := auth.NewService(*userRepo, *jwtManager)
@@ -69,8 +67,8 @@ func main() {
 	}
 	resource := r.Group("/resource")
 	{
-		resource.GET("/resource", resourceHandler.Resource)
-		resource.GET("/resource/:id", resourceHandler.Resource)
+		resource.GET("", resourceHandler.Resource)
+		resource.GET("/:id", resourceHandler.ResourceWithID)
 	}
 
 	srv := &http.Server{

@@ -3,17 +3,17 @@ package booking
 import "time"
 
 type Request struct {
-	resource_id int64      `json:"resource_id" validate:"required"`
-	start_time  *time.Time `json:"start_time" validate:"start_time < end_time"`
-	end_time    *time.Time `json:"end_time" validate:"end_time > start_time"`
+	Resource_id int64      `json:"resource_id" validate:"required,gt=0"`
+	Start_time  *time.Time `json:"start_time" validate:"required"`
+	End_time    *time.Time `json:"end_time" validate:"required"`
 }
 
 type Response struct {
-	id          int64
-	user_id     int64
-	resource_id int64
-	start_time  time.Time
-	end_time    time.Time
+	ID          int64     `json:"id"`
+	User_id     int64     `json:"user_id"`
+	Resource_id int64     `json:"resource_id"`
+	Start_time  time.Time `json:"start_time"`
+	End_time    time.Time `json:"end_time"`
 }
 
 type ListResponse struct {

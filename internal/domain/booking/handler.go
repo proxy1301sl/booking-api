@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 type BookingHandler struct {
@@ -29,6 +30,10 @@ func (h *BookingHandler) Booking(c *gin.Context) {
 		responce.ErrorResponse(c, http.StatusBadRequest, validation.Error(), nil)
 		return
 	}
+	if !req.Start_time.Before(*req.End_time) {
+		responce.ErrorResponse(c, http.StatusBadRequest, "start_time must be before end_time", nil)
+		return
+	}
 	userID, exist := c.Get("user_id")
 	if !exist {
 		responce.ErrorResponse(c, http.StatusUnauthorized, "not_found", nil)
@@ -39,14 +44,22 @@ func (h *BookingHandler) Booking(c *gin.Context) {
 		responce.ErrorResponse(c, http.StatusUnauthorized, "not_found", nil)
 		return
 	}
-	id, err := h.svc.CreateBooking(c.Request.Context(), id, req.resource_id, req.start_time, req.end_time)
+	id, err := h.svc.CreateBooking(c.Request.Context(), id, req.Resource_id, req.Start_time, req.End_time)
 	if err != nil {
 		if errors.Is(err, httpx.ErrConflict) {
 			responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
 			return
 		}
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
-
+		if errors.Is(err, pgx.ErrNoRows) {
+			responce.ErrorResponse(c, http.StatusNotFound, "resource not found", nil)
+			return
+		}
+		if errors.Is(err, httpx.ErrResourceInactive) {
+			responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		return
 	}
 	responce.SuccessResponse(c, http.StatusCreated, "", id)
 
@@ -65,7 +78,7 @@ func (h *BookingHandler) GetBookings(c *gin.Context) {
 	}
 	res, err := h.svc.GetBookingByID(c.Request.Context(), id)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "", res)

@@ -22,7 +22,7 @@ func NewAuthMiddleware(manager *auth.Manager) *AuthMiddleware {
 func (m *AuthMiddleware) Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
-		if header == "" {
+		if !strings.HasPrefix(header, "Bearer ") || strings.TrimSpace(strings.TrimPrefix(header, "Bearer ")) == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"success": false,
 				"code":    http.StatusUnauthorized,
