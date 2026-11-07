@@ -10,4 +10,5 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrConflict           = errors.New("conflict")
+	ErrResourceInactive   = errors.New("resource is inactive")
 )

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 
 	"booking-api/internal/domain/httpx"
@@ -37,6 +38,10 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.U
 	}
 	err = s.repo.Create(ctx, &usr)
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return nil, httpx.ErrEmailAlreadyExists
+		}
 		return nil, err
 	}
 	return &usr, nil
@@ -46,7 +51,10 @@ func (s *Service) CreateUser(ctx context.Context, req RegisterRequest) (*model.U
 func (s *Service) Login(ctx context.Context, req LoginRequest) (string, error) {
 	user, err := s.repo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		return "", httpx.ErrInvalidCredentials
+		if errors.Is(err, httpx.ErrNotFound) {
+			return "", httpx.ErrInvalidCredentials
+		}
+		return "", err
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
 	if err != nil {

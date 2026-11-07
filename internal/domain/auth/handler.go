@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"booking-api/internal/domain/httpx"
 	"booking-api/internal/domain/responce"
 	"booking-api/internal/domain/validator"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,10 +31,14 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	user, err := h.svc.CreateUser(c.Request.Context(), req)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
+		if errors.Is(err, httpx.ErrEmailAlreadyExists) {
+			responce.ErrorResponse(c, http.StatusConflict, err.Error(), nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
-	responce.SuccessResponse(c, http.StatusCreated, "User created successfully", user)
+	responce.SuccessResponse(c, http.StatusCreated, "User created successfully", user.ID)
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -47,7 +53,11 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 	token, err := h.svc.Login(c.Request.Context(), req)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusUnauthorized, err.Error(), nil)
+		if errors.Is(err, httpx.ErrInvalidCredentials) {
+			responce.ErrorResponse(c, http.StatusUnauthorized, err.Error(), nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "Token created successfully", token)
@@ -66,7 +76,11 @@ func (h *Handler) Me(c *gin.Context) {
 	}
 	usr, err := h.svc.GetUserID(c, id)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, "", err.Error())
+		if errors.Is(err, httpx.ErrUserNotFound) {
+			responce.ErrorResponse(c, http.StatusNotFound, "user not found", nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "User fetched successfully", usr)

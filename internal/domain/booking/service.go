@@ -27,8 +27,11 @@ func (h *Service) CreateBooking(ctx context.Context, userID, resID int64, startT
 	if err != nil {
 		return 0, err
 	}
+	if !res.IsActive {
+		return 0, httpx.ErrResourceInactive
+	}
 	id, err := h.repo.CreateBooking(ctx, userID, res.ID, startTime, endTime)
-	if errors.Is(err, httpx.ErrConflict) {
+	if err != nil {
 		return 0, err
 	}
 	return id, nil

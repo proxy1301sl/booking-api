@@ -2,10 +2,12 @@ package resource
 
 import (
 	"booking-api/internal/domain/responce"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 type Handler struct {
@@ -18,7 +20,7 @@ func NewHandler(svc *Service) *Handler {
 
 func (h *Handler) Resource(c *gin.Context) {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil || page <= 1 {
+	if err != nil || page < 1 {
 		responce.ErrorResponse(c, http.StatusBadRequest, "invalid page param", nil)
 		return
 	}
@@ -29,7 +31,7 @@ func (h *Handler) Resource(c *gin.Context) {
 	}
 	res, err := h.svc.List(c.Request.Context(), &Pagination{Page: page, Limit: limit})
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "available resources", res)
@@ -43,7 +45,11 @@ func (h *Handler) ResourceWithID(c *gin.Context) {
 	}
 	res, err := h.svc.Get(c.Request.Context(), id)
 	if err != nil {
-		responce.ErrorResponse(c, http.StatusInternalServerError, err.Error(), nil)
+		if errors.Is(err, pgx.ErrNoRows) {
+			responce.ErrorResponse(c, http.StatusNotFound, "resource not found", nil)
+			return
+		}
+		responce.ErrorResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		return
 	}
 	responce.SuccessResponse(c, http.StatusOK, "resource detail", res)

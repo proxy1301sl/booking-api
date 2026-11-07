@@ -18,14 +18,14 @@ func NewUserRepo(db *db2.Postgres) *Repository {
 }
 
 func (r *Repository) Create(ctx context.Context, u *User) error {
-	query := `INSERT INTO users (email, password_hash, role) VALUES ($1, $2, $3) RETURNING id, created_at`
-	err := r.db.Pool.QueryRow(ctx, query, u.Email, u.PasswordHash, u.Role).Scan(&u.ID, &u.CreatedAt)
+	query := `INSERT INTO core.users (email, password_hash) VALUES ($1, $2) RETURNING id, role`
+	err := r.db.Pool.QueryRow(ctx, query, u.Email, u.PasswordHash).Scan(&u.ID, &u.Role)
 	return err
 }
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
-	query := `SELECT id, password_hash, email, role, created_at FROM users WHERE email = $1`
+	query := `SELECT id, password_hash, email, role, created_at FROM core.users WHERE email = $1`
 	err := r.db.Pool.QueryRow(ctx, query, email).Scan(&u.ID, &u.PasswordHash, &u.Email, &u.Role, &u.CreatedAt)
 	if err == nil {
 		return &u, nil
@@ -39,7 +39,7 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 
 func (r *Repository) FindByID(ctx context.Context, id int64) (*User, error) {
 	var u User
-	query := `SELECT id, password_hash, email, role, created_at FROM users WHERE id = $1`
+	query := `SELECT id, password_hash, email, role, created_at FROM core.users WHERE id = $1`
 	err := r.db.Pool.QueryRow(ctx, query, id).Scan(&u.ID, &u.PasswordHash, &u.Email, &u.Role, &u.CreatedAt)
 	if err == nil {
 		return &u, nil

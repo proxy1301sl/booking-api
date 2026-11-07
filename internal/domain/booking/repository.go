@@ -21,7 +21,7 @@ func NewRepository(db *db.Postgres) *Repository {
 
 func (r *Repository) CreateBooking(ctx context.Context, userID, resID int64, startTime, endTime *time.Time) (int64, error) {
 	var id int64
-	query := `INSERT INTO booking (user_id, resource_id, start_time, end_time) VALUES ($1, $2, $3, $4) RETURNING id`
+	query := `INSERT INTO core.booking (user_id, resource_id, start_time, end_time) VALUES ($1, $2, $3, $4) RETURNING id`
 	err := r.db.Pool.QueryRow(ctx, query, userID, resID, startTime, endTime).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
@@ -30,7 +30,7 @@ func (r *Repository) CreateBooking(ctx context.Context, userID, resID int64, sta
 				return 0, httpx.ErrConflict
 			}
 		}
-
+		return 0, err
 	}
 
 	return id, nil
@@ -38,7 +38,7 @@ func (r *Repository) CreateBooking(ctx context.Context, userID, resID int64, sta
 }
 
 func (r *Repository) GetBookingByID(ctx context.Context, userID int64) ([]Response, error) {
-	rows, err := r.db.Pool.Query(ctx, `SELECT * FROM booking WHERE user_id = $1`, userID)
+	rows, err := r.db.Pool.Query(ctx, `SELECT id, user_id, resource_id, start_time, end_time FROM core.booking WHERE user_id = $1 ORDER BY id`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,11 @@ func (r *Repository) GetBookingByID(ctx context.Context, userID int64) ([]Respon
 	var data []Response
 	for rows.Next() {
 		var v Response
-		if err = rows.Scan(&v.id, &v.resource_id, &v.start_time, &v.end_time); err != nil {
+		if err = rows.Scan(&v.ID, &v.User_id, &v.Resource_id, &v.Start_time, &v.End_time); err != nil {
 			return nil, err
 		}
 		data = append(data, v)
 	}
-	return data, nil
+	return data, rows.Err()
 
 }

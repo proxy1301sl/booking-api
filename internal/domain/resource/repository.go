@@ -17,7 +17,7 @@ func New(db *db2.Postgres) *Repository {
 }
 
 func (r *Repository) ListAvailableResources(ctx context.Context, p *ListParams) ([]Resource, error) {
-	rows, err := r.db.Pool.Query(ctx, "SELECT id, name, description, location, is_active, created_at FROM resource WHERE is_active = true LIMIT $1 OFFSET $2", p.Limit, p.Offset)
+	rows, err := r.db.Pool.Query(ctx, "SELECT id, COALESCE(name, ''), COALESCE(description, ''), COALESCE(location, ''), is_active, created_at FROM core.resource WHERE is_active = true ORDER BY id LIMIT $1 OFFSET $2", p.Limit, p.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +30,12 @@ func (r *Repository) ListAvailableResources(ctx context.Context, p *ListParams) 
 		}
 		data = append(data, w)
 	}
-	return data, nil
+	return data, rows.Err()
 }
 
 func (r *Repository) GetByID(ctx context.Context, id int64) (*ListResource, error) {
 	var res ListResource
-	query := `SELECT id, name, description, location, is_active, created_at FROM resource WHERE id = $1`
+	query := `SELECT id, COALESCE(name, ''), COALESCE(description, ''), COALESCE(location, ''), is_active, created_at FROM core.resource WHERE id = $1`
 	err := r.db.Pool.QueryRow(ctx, query, id).Scan(&res.ID, &res.Name, &res.Description, &res.Location, &res.IsActive, &res.CreatedAt)
 	if err == nil {
 		return &res, nil
